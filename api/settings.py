@@ -57,7 +57,7 @@ REST_SESSION_LOGIN = True
 SITE_ID = 1
 ACCOUNT_EMAIL_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'username'
-ACCOUNT_EMAIL_VERIFICATION = 'optional'
+ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

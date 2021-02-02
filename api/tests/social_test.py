@@ -5,7 +5,7 @@ from rest_framework import status
 from django.urls import reverse
 
 from ..models import Team, Member
-from ..views import MemberViewSet
+from ..old_views import MemberViewSet
 from ..serializers import TeamSerializer, MemberSerializer
 
 import datetime

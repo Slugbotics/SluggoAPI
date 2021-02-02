@@ -46,7 +46,7 @@ class Ticket(HasUuid, TeamRelated):
     ticket_number = models.IntegerField()
 
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="owned_ticket"
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="owned_ticket", null=False
     )
 
     assigned_user = models.ForeignKey(
@@ -64,6 +64,8 @@ class Ticket(HasUuid, TeamRelated):
         blank=True,
         null=True
     )
+
+    tag_list = models.ManyToManyField('Tag', through='TicketTag')
 
     title = models.CharField(max_length=100, blank=False)
     description = models.TextField(blank=True)

@@ -67,7 +67,7 @@ class Member(HasUuid, TeamRelated):
         max_length=2, choices=Roles.choices, default=Roles.UNAPPROVED
     )
 
-    pronouns = models.TextField(null=True)
+    pronouns = models.CharField(max_length=256, null=True)
 
     bio = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
@@ -76,6 +76,13 @@ class Member(HasUuid, TeamRelated):
     memberUUID = models.UUIDField(null=True, blank=False, default=uuid.uuid4, editable=False, unique=True)
 
     objects = MemberManager()
+
+    def is_admin(self):
+        return self.role == self.Roles.ADMIN
+
+    def is_approved(self):
+        return self.role == self.Roles.ADMIN or self.role == self.Roles.APPROVED
+
 
     class Meta:
         ordering = ["created"]

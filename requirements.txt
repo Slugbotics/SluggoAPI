@@ -8,3 +8,4 @@ coreapi
 pyyaml
 pipenv
 drf-spectacular
+drf-nested-routers

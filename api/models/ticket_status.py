@@ -1,6 +1,5 @@
 from django.db import models
 from .team import Team
-import uuid
 
 from api.models.interfaces import HasUuid, TeamRelated
 
@@ -11,11 +10,10 @@ class TicketStatus(HasUuid, TeamRelated):
     By default, they will be created, started, and completed
     """
 
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=100, unique=True)
     created = models.DateTimeField(auto_now_add=True)
     activated = models.DateTimeField(null=True, blank=True)
     deactivated = models.DateTimeField(null=True, blank=True)
-    ticket_statusUUID = models.UUIDField(null=True, blank=False, default=uuid.uuid4, editable=False, unique=True)
 
     class Meta:
         ordering = ["id"]

@@ -18,9 +18,11 @@ class EventViewSet(TeamRelatedViewSet, mixins.DestroyModelMixin):
         IsMemberUser,
     ]
 
+    @extend_schema(**TeamRelatedViewSet.schema_dict)
     @action(detail=True, methods=["GET"], permission_classes=[
         permissions.IsAuthenticated, IsMemberUser
     ])
+    @team_queried_view
     def list_team(self, request, pk=None):
         return super().list_team(request, pk)
 
