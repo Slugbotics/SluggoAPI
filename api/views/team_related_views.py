@@ -1,10 +1,14 @@
 from .team_related_base import *
+from ..serializers import *
 
 
 class TeamViewSet(viewsets.ModelViewSet):
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
     permission_classes = [IsAdminMemberOrReadOnly, IsAuthenticated]
+
+    search_fields = ['^name', '^description']
+    ordering_fields = ['created', 'activated']
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -26,6 +30,12 @@ class TicketViewSet(TeamRelatedModelViewSet):
         'tag_list'
     )
     serializer_class = TicketSerializer
+
+    search_fields = ['^team__name', '^team__description', '^title', '^description', '^status__title',
+                     '^assigned_user__first_name']
+
+    ordering_fields = ['created', 'activated']
+    filterset_fields = ['owner__username']
 
     @extend_schema(**TEAM_DETAIL_SCHEMA)
     def create(self, request, *args, **kwargs):
@@ -103,6 +113,7 @@ class EventViewSet(TeamRelatedListMixin,
                    TeamRelatedUpdateMixin,
                    TeamRelatedRetrieveMixin,
                    TeamRelatedDestroyMixin):
+
     permission_classes = [
         IsAuthenticated,
         IsAdminMemberOrReadOnly,
