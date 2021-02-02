@@ -64,7 +64,7 @@ class EventTestCase(TestCase):
         self.event = Event(
             team=self.team,
             created=datetime.datetime(2020, 10, 9, 23, 55, 59, 342380),
-            event_type="1",
+            event_type=1,
             description=self.event_description,
             user=self.assigned_user
         )
@@ -90,25 +90,67 @@ class EventViewTestCase(TestCase):
 
         self.event_client = APIClient()
         self.event_client.force_authenticate(user=self.event_user)
-        mem_response = self.ticket_client.post(
+        mem_response = self.event_client.post(
             reverse("team-create-record"), team_dict, format="json"
         )
         team_id = mem_response.data["id"]
         self.team = Team.objects.get(pk=team_id)
 
         self.event_data = {
-            "event_id": self.event_user.id,
-            "title": "Sic Mundus Creatus Est",
+            "description": "Sic Mundus Creatus Est",
             "team_id": self.team.id,
+            "user": self.event_user.id,
+            "event_type": 1
         }
 
         self.response = None
         for i in range(3):
             self.response = self.event_client.post(
-                reverse("event-create-record"), self.event_data, format="json"
+                reverse("event-create"), self.event_data, format="json"
             )
 
         self.event_id = self.response.data["id"]
         self.event = Ticket.objects.get(pk=self.ticket_id)
+
+    def testEventCreate(self):
+        """Test if the api can create a event."""
+        record = Event.objects.get(id=self.event_id)
+        self.assertEqual(Ticket.objects.count(), 1)
+
+    def testEventRead(self):
+        # read the record created in setUp. confirm the results are expected
+        url = reverse("event-detail", kwargs={"pk": self.event_id})
+        response = self.event_client.get(
+            url, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def testEventList(self):
+        # eat shit and die
+
+        self.another_event = {
+            "description": "Sic Mundus Creatus Est",
+            "team_id": self.team.id,
+            "user": self.event_user.id,
+            "event_type": 1
+        }
+
+        self.event_client.post(
+            reverse("event-create"),
+            self.another_event,
+            format="json"
+        )
+
+        url = reverse('ticket-list-team', kwargs={"pk": self.team.id})
+        url += '?search=-created'
+
+        print(url)
+
+        response = self.ticket_client.get(
+            url, format="json"
+        )
+        print(response.data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
