@@ -41,6 +41,7 @@ admin_dict = dict(
 
 team_dict = {"name": "bugslotics", "description": "a pretty cool team"}
 
+
 class EventTestCase(TestCase):
     def setUp(self):
         """ Create two test users Jonas and Noah and a ticket assigned to/created from them"""

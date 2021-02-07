@@ -4,7 +4,7 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from django.urls import reverse
 
-from api.models import (Ticket, Team, Member, Tag, TicketStatus, TicketTag, TicketNode)
+from api.models import (Ticket, Team, Member, Tag, TicketStatus, TicketTag, TicketNode, Event)
 from ..serializers import UserSerializer, TicketStatusSerializer, TicketTagSerializer
 
 TEAM_PK = "team_pk"
@@ -365,3 +365,26 @@ class StatusTestCase(TeamRelatedCore):
 
     def testDelete(self):
         self.delete()
+
+
+class EventTestCase(TeamRelatedCore):
+    data_dict = {
+        "event_type":Event.CREATE,
+        "description":"Sic Mundus Creatus Est",
+        "team_id":"1"
+    }
+
+    def setUp(self):
+        super().setUp()
+
+    def testCreate(self):
+        event = Event.objects.create(event_type=Event.CREATE, description="Sic Mundus Creatus Est", team_id="1")
+
+    def testList(self):
+        self.list()
+
+    def testUpdate(self):
+        updated_dict = self.data_dict
+        updated_dict["description"] = "New description"
+        self.update(updated_dict)
+

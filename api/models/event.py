@@ -19,7 +19,7 @@ class Event(TeamRelated):
 
     created = models.DateTimeField(auto_now_add=True)
     event_type = models.SmallIntegerField(choices=events)
-    description = models.TextField(null=True, blank=True)
+    description = models.TextField(blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              null=True,
                              blank=True,
