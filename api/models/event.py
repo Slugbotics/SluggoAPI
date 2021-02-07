@@ -3,8 +3,10 @@ from .team import Team
 from django.conf import settings
 import uuid
 
+from api.models.interfaces import HasUuid, TeamRelated
 
-class Event(models.Model):
+
+class Event(TeamRelated):
     CREATE = 1
     UPDATE = 2
     DELETE = 3
@@ -15,11 +17,13 @@ class Event(models.Model):
         (DELETE, "Delete"),
     ]
 
-    team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True)
     created = models.DateTimeField(auto_now_add=True)
     event_type = models.SmallIntegerField(choices=events)
     description = models.TextField(null=True, blank=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             null=True,
+                             blank=True,
+                             on_delete=models.SET_NULL)
     object = models.UUIDField(null=True, blank=False, default=uuid.uuid4)
 
     def is_create(self):

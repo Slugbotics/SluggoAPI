@@ -11,13 +11,14 @@ class BaseMemberPermissions(BasePermission):
         team_id = obj.id if isinstance(obj, Team) else obj.team.id
         team_id = "{}".format(team_id)
         member_pk = (
-            md5(team_id.encode()).hexdigest() + md5(username.encode()).hexdigest()
+                md5(team_id.encode()).hexdigest() + md5(username.encode()).hexdigest()
         )
         return Member.objects.get(pk=member_pk)
 
 
 # only permit this if the user is approved
 class IsMemberUser(BaseMemberPermissions):
+
     def has_object_permission(self, request, view, obj):
 
         try:
@@ -27,6 +28,14 @@ class IsMemberUser(BaseMemberPermissions):
             permit = False
 
         return permit
+
+
+class IsMemberUserOrCreate(IsMemberUser):
+    def has_object_permission(self, request, view, obj):
+        if request.method not in SAFE_METHODS and request.method != 'POST':
+            return super().has_object_permission(request, view, obj)
+        else:
+            return True
 
 
 class IsAdminMemberOrReadOnly(BaseMemberPermissions):
@@ -44,7 +53,7 @@ class IsAdminMemberOrReadOnly(BaseMemberPermissions):
                 member_record = self.retrieveMemberRecord(
                     request.user.username, obj
                 )
-                permit = member_record.role == Member.Roles.ADMIN
+                permit = member_record.is_admin()
 
             except Member.DoesNotExist:
                 permit = False
@@ -66,5 +75,9 @@ class IsOwnerOrReadOnly(BaseMemberPermissions):
         if request.method in SAFE_METHODS:
             return True
 
-        # Write permissions are only allowed to the owner of the object.
-        return obj.owner == request.user
+        # hack. add HasOwner interface
+        if hasattr(obj, 'owner'):
+            return obj.owner == request.user
+        else:
+            return True
+

@@ -12,7 +12,6 @@ class PrimaryKeySerializedField(serializers.PrimaryKeyRelatedField):
     On reads, this will serialize the associated resource, nesting it
     within the outer json
     """
-
     def __init__(self, **kwargs):
         self.serializer = kwargs.pop('serializer')
         self.many = kwargs.get('many')
@@ -36,7 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ["id", "email", "first_name", "last_name"]
+        fields = ["id", "email", "first_name", "last_name", "username"]
 
 
 class TeamSerializer(serializers.ModelSerializer):
@@ -70,9 +69,10 @@ class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = api_models.Tag
-        fields = ["id", "team_id",
-                  "object_uuid",
-                  "title", "created", "activated", "deactivated"]
+        fields = [
+            "id", "team_id", "object_uuid", "title", "created", "activated",
+            "deactivated"
+        ]
 
 
 class MemberSerializer(serializers.ModelSerializer):
@@ -131,9 +131,9 @@ class TicketStatusSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = api_models.TicketStatus
-        fields = ["id",
-                  "object_uuid",
-                  "title", "created", "activated", "deactivated"]
+        fields = [
+            "id", "object_uuid", "title", "created", "activated", "deactivated"
+        ]
 
 
 class TicketTagSerializer(serializers.ModelSerializer):
@@ -145,9 +145,7 @@ class TicketTagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = api_models.TicketTag
-        fields = ["tag", "created",
-                  "object_uuid",
-                  "activated", "deactivated"]
+        fields = ["tag", "created", "object_uuid", "activated", "deactivated"]
 
 
 class TicketNodeSerializer(serializers.ModelSerializer):
@@ -172,8 +170,10 @@ class TicketSerializer(serializers.ModelSerializer):
 
     id = serializers.ReadOnlyField()
 
-    tag_list = PrimaryKeySerializedField(many=True, required=False,
-                                         queryset=api_models.Tag.objects.all(), serializer=TagSerializer)
+    tag_list = PrimaryKeySerializedField(many=True,
+                                         required=False,
+                                         queryset=api_models.Tag.objects.all(),
+                                         serializer=TagSerializer)
 
     parent_id = serializers.IntegerField(write_only=True, required=False)
     object_uuid = serializers.ReadOnlyField()
@@ -182,11 +182,16 @@ class TicketSerializer(serializers.ModelSerializer):
     ticket_number = serializers.ReadOnlyField()
     comments = TicketCommentSerializer(many=True, required=False)
 
-    assigned_user = UserSerializer(many=False, read_only=True)
+    assigned_user = PrimaryKeySerializedField(many=False,
+                                              required=False,
+                                              queryset=User.objects.all(),
+                                              serializer=UserSerializer)
 
     status = PrimaryKeySerializedField(
-        many=False, required=False, queryset=api_models.TicketStatus.objects.all(), serializer=TicketStatusSerializer
-    )
+        many=False,
+        required=False,
+        queryset=api_models.TicketStatus.objects.all(),
+        serializer=TicketStatusSerializer)
 
     created = serializers.ReadOnlyField()
     activated = serializers.ReadOnlyField()
@@ -215,9 +220,7 @@ class TicketSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         tag_list = validated_data.pop('tag_list', None)
 
-        ticket = api_models.Ticket.objects.create(
-            **validated_data
-        )
+        ticket = api_models.Ticket.objects.create(**validated_data)
 
         api_models.TicketTag.create_all(tag_list, ticket)
 
@@ -246,20 +249,12 @@ class EventSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField()
     created = serializers.ReadOnlyField()
     event_type = serializers.ReadOnlyField()
-    user = PrimaryKeySerializedField(
-        many=False, read_only=True, queryset=api_models.Member.objects.all(), serializer=UserSerializer
-    )
+    user = UserSerializer(many=False)
     object_id = serializers.ReadOnlyField()
 
     class Meta:
         model = api_models.Event
         fields = [
-            "id",
-            "team_id",
-            "created",
-            "event_type",
-            "user",
-            "user_id",
-            "description",
-            "object_id"
+            "id", "team_id", "created", "event_type", "user", "user_id",
+            "description", "object_id"
         ]

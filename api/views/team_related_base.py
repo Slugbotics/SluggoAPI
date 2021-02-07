@@ -4,8 +4,8 @@ from drf_spectacular.utils import extend_schema
 from django.shortcuts import get_object_or_404
 
 from ..models import *
-from ..permissions import *
 from ..docs import *
+from ..permissions import *
 
 """
 subclassing all the entire model viewset path in order to generate
@@ -19,12 +19,16 @@ class NewTeamRelatedBase(viewsets.GenericViewSet):
     search_fields = ['^name', '^description']
     ordering_fields = ['created', 'activated']
 
-    def get_team(self, *args, **kwargs):
+    def check_permissions(self, request):
+        super().check_permissions(request)
+        super().check_object_permissions(request, self.get_team())
+
+    def get_team(self):
         team_id = self.kwargs.get(TEAM_PK)
         return get_object_or_404(Team, pk=team_id)
 
     def get_queryset(self, *args, **kwargs):
-        team_instance = self.get_team(*args, **kwargs)
+        team_instance = self.get_team()
         return self.queryset.filter(team=team_instance)
 
 
@@ -48,7 +52,7 @@ class TeamRelatedCreateMixin(NewTeamRelatedBase, mixins.CreateModelMixin):
         serializer.is_valid(raise_exception=True)
 
         # save the instance
-        team_instance = self.get_team(*args, **kwargs)
+        team_instance = self.get_team()
         serializer.save(team=team_instance)
 
         headers = self.get_success_headers(serializer.data)

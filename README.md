@@ -42,14 +42,20 @@ This assumes that a slack app is already created. Do the following:
 
 2. In a browser navigate to `$HOST/admin`, replacing `$HOST` with whatever the domain the local server is run with.
 
-3. Add a Social Application.
+3. Add a Social Application. (this is not important if you are not dependent on the slack api)
     
     a. Set provider to Slack
+    
     b. Set name to something appropriate like slack or slack-bot, etc
+    
     c. Enter the Client id from the slack bot's dashboard
+    
     d. Enter the secret key from the slack bot's dashboard
+    
     e. Leave Key empty
+    
     f. Choose the first site in the list (likely to be `example.com`)
+    
     g. Save.
 
 ## Running

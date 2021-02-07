@@ -184,6 +184,73 @@ class TicketTestCase(TeamRelatedCore):
         self.update(extra_data)
 
 
+class WrongTeamTestCase(TicketTestCase):
+    other_user = dict(
+        username="org.org.org",
+        email="asdf@sicmundus.org",
+        first_name="Jonas",
+        last_name="Kahnwald",
+    )
+
+    def setUp(self):
+        super().setUp()
+
+        user_instance = User.objects.create(**self.other_user)
+        self.client = APIClient()
+        self.client.force_authenticate(user=user_instance)
+
+    def list(self):
+        response = self.client.get(
+            reverse(self.prefix + "-list", kwargs={"team_pk": self.team.id}),
+            format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def detail(self):
+        response = self.client.get(
+            reverse(self.prefix + "-detail", kwargs={
+                "team_pk": self.team.id,
+                "pk": self.pk
+            }), format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def update(self, updated_dict):
+        response = self.client.put(
+            reverse(self.prefix + "-detail", kwargs={
+                "team_pk": self.team.id,
+                "pk": self.pk
+            }), data=updated_dict, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def delete(self):
+        response = self.client.delete(
+            reverse(self.prefix + "-detail", kwargs={
+                "team_pk": self.team.id,
+                "pk": self.pk
+            }), format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def testTagOnCreate(self):
+        extra_data = dict(self.data_dict)
+
+        ticket_status = TicketStatus.objects.create(title="status", team=self.team)
+        extra_data["status"] = ticket_status.id
+
+        tag_instance = Tag.objects.create(title="wine", team=self.team)
+        extra_data["tag_list"] = [
+            tag_instance.id
+        ]
+
+        response = self.client.post(
+            reverse(self.prefix + "-list", kwargs={TEAM_PK: self.team.id}),
+            data=extra_data, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
 class MemberTestCase(TeamRelatedCore):
     prefix = "team-members"
 

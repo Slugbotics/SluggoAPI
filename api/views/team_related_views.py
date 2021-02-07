@@ -1,5 +1,6 @@
 from .team_related_base import *
 from ..serializers import *
+from ..permissions import *
 
 
 class TeamViewSet(viewsets.ModelViewSet):
@@ -30,6 +31,7 @@ class TicketViewSet(TeamRelatedModelViewSet):
         'tag_list'
     )
     serializer_class = TicketSerializer
+    permission_classes = [IsAuthenticated, IsMemberUser]
 
     search_fields = ['^team__name', '^team__description', '^title', '^description', '^status__title',
                      '^assigned_user__first_name']
@@ -42,7 +44,7 @@ class TicketViewSet(TeamRelatedModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        serializer.save(owner=request.user, team=self.get_team(*args, **kwargs))
+        serializer.save(owner=request.user, team=self.get_team())
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -54,7 +56,7 @@ class MemberViewSet(TeamRelatedModelViewSet):
     )
     serializer_class = MemberSerializer
     permission_classes = [
-        IsMemberUser, IsOwnerOrReadOnly, IsAuthenticated
+        IsMemberUserOrCreate, IsOwnerOrReadOnly, IsAuthenticated
     ]
 
     @extend_schema(**TEAM_DETAIL_SCHEMA)
@@ -63,7 +65,7 @@ class MemberViewSet(TeamRelatedModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         # save the instance
-        team_instance = self.get_team(*args, **kwargs)
+        team_instance = self.get_team()
         serializer.save(owner=request.user, team=team_instance)
 
         headers = self.get_success_headers(serializer.data)
@@ -113,7 +115,6 @@ class EventViewSet(TeamRelatedListMixin,
                    TeamRelatedUpdateMixin,
                    TeamRelatedRetrieveMixin,
                    TeamRelatedDestroyMixin):
-
     permission_classes = [
         IsAuthenticated,
         IsAdminMemberOrReadOnly,
@@ -125,4 +126,3 @@ class EventViewSet(TeamRelatedListMixin,
         'user'
     )
     serializer_class = EventSerializer
-
