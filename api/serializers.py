@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from . import models as api_models
+import sys
 
 User = get_user_model()
 
@@ -12,8 +13,17 @@ class PrimaryKeySerializedField(serializers.PrimaryKeyRelatedField):
     On reads, this will serialize the associated resource, nesting it
     within the outer json
     """
+
     def __init__(self, **kwargs):
-        self.serializer = kwargs.pop('serializer')
+        serializer = kwargs.pop('serializer')
+
+        if isinstance(serializer, str) and (s_class := getattr(sys.modules[__name__], serializer, None)):
+            self.serializer = s_class
+        elif issubclass(serializer, serializers.BaseSerializer):
+            self.serializer = serializer
+        else:
+            raise Exception("invalid serializer specified!")
+
         self.many = kwargs.get('many')
         super().__init__(**kwargs)
 
@@ -174,7 +184,7 @@ class TicketSerializer(serializers.ModelSerializer):
                                          queryset=api_models.Tag.objects.all(),
                                          serializer=TagSerializer)
 
-    parent_id = serializers.IntegerField(write_only=True, required=False)
+    parent = serializers.IntegerField(write_only=True, required=False)
     object_uuid = serializers.ReadOnlyField()
 
     owner = UserSerializer(many=False, read_only=True)
@@ -202,7 +212,8 @@ class TicketSerializer(serializers.ModelSerializer):
             "id",
             "ticket_number",
             "tag_list",
-            "parent_id",
+            "parent",
+            "child_tickets",
             "owner",
             "object_uuid",
             "assigned_user",
@@ -218,8 +229,9 @@ class TicketSerializer(serializers.ModelSerializer):
     # this creates a record from the json, modifying the keys
     def create(self, validated_data):
         tag_list = validated_data.pop('tag_list', None)
+        parent = validated_data.pop('parent', None)
 
-        ticket = api_models.Ticket.objects.create(**validated_data)
+        ticket = api_models.Ticket.add_root(**validated_data)
 
         api_models.TicketTag.create_all(tag_list, ticket)
 

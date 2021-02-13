@@ -5,6 +5,7 @@ from .team import Team
 from .ticket import Ticket
 from api.models.interfaces import HasUuid, TeamRelated
 from hashlib import md5
+from functools import reduce
 
 
 class Tag(HasUuid, TeamRelated):

@@ -4,10 +4,11 @@ from django.conf import settings
 from .team import Team
 from .ticket_status import TicketStatus
 from api.models.interfaces import HasUuid, TeamRelated
+from treebeard import mp_tree
 import uuid
 
 
-class Ticket(HasUuid, TeamRelated):
+class Ticket(HasUuid, TeamRelated, mp_tree.MP_Node):
     """
     The Ticket class for Sluggo. This will store all information associated with a specific ticket.
 
