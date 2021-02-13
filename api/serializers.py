@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from . import models as api_models
+from django.shortcuts import get_object_or_404
 import sys
 
 User = get_user_model()
@@ -213,7 +214,6 @@ class TicketSerializer(serializers.ModelSerializer):
             "ticket_number",
             "tag_list",
             "parent",
-            "child_tickets",
             "owner",
             "object_uuid",
             "assigned_user",
@@ -231,7 +231,13 @@ class TicketSerializer(serializers.ModelSerializer):
         tag_list = validated_data.pop('tag_list', None)
         parent = validated_data.pop('parent', None)
 
-        ticket = api_models.Ticket.add_root(**validated_data)
+        if parent:
+            # warning: add_child may throw path_overflow
+            parent_instance = get_object_or_404(api_models.Ticket, pk=parent)
+            ticket = parent_instance.add_child(**validated_data)
+
+        else:
+            ticket = api_models.Ticket.add_root(**validated_data)
 
         api_models.TicketTag.create_all(tag_list, ticket)
 
@@ -240,6 +246,12 @@ class TicketSerializer(serializers.ModelSerializer):
     # update the instance with validated_data
     def update(self, instance, validated_data):
         tag_list = validated_data.pop('tag_list', None)
+        parent = validated_data.pop('parent', None)
+
+        # TODO: figure out update semantics for adding a subticket
+        # if parent:
+        #     parent_instance = get_object_or_404(api_models.Ticket, pk=parent)
+        #     parent_instance.move(instance, pos='last-child')
 
         api_models.TicketTag.delete_difference(tag_list, instance)
 

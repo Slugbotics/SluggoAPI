@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
 from django.urls import reverse
+import json
 
 from api.models import (Ticket, Team, Member, Tag, TicketStatus, TicketTag, TicketNode)
 from ..serializers import UserSerializer, TicketStatusSerializer, TicketTagSerializer
@@ -140,6 +141,24 @@ class TicketTestCase(TeamRelatedCore):
     def testList(self):
         self.list()
 
+    def testChildTickets(self):
+        url = f"/api/teams/{self.team.id}/tickets/{self.pk}/child_tickets/"
+
+        # add a mf child ticket
+        sub_ticket = dict(self.data_dict)
+        sub_ticket["parent"] = self.pk
+        response = self.client.post(
+            reverse(self.prefix + "-list", kwargs={"team_pk": self.team.id}),
+            data=sub_ticket, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.get(
+            url
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
     def testDetail(self):
         self.detail()
 
@@ -203,6 +222,14 @@ class WrongTeamTestCase(TicketTestCase):
         response = self.client.get(
             reverse(self.prefix + "-list", kwargs={"team_pk": self.team.id}),
             format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def testChildTickets(self):
+        url = f"/api/teams/{self.team.id}/tickets/{self.pk}/child_tickets/"
+
+        response = self.client.get(
+            url
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 

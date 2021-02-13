@@ -1,3 +1,5 @@
+from rest_framework.decorators import action
+from treebeard.exceptions import PathOverflow
 from .team_related_base import *
 from ..serializers import *
 from ..permissions import *
@@ -41,13 +43,40 @@ class TicketViewSet(TeamRelatedModelViewSet):
 
     @extend_schema(**TEAM_DETAIL_SCHEMA)
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
 
-        serializer.save(owner=request.user, team=self.get_team())
+            serializer.save(owner=request.user, team=self.get_team())
 
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+        except PathOverflow as e:
+            return Response({"msg": e.__str__()}, status.HTTP_400_BAD_REQUEST)
+
+    # @extend_schema(**TEAM_DETAIL_SCHEMA)
+    # def update(self, request, *args, **kwargs):
+    #     try:
+    #         return super().update(request, *args, **kwargs)
+    #     except PathOverflow as e:
+    #         return Response({"msg": e.__str__()}, status.HTTP_400_BAD_REQUEST)
+    #
+    # @extend_schema(**TEAM_DETAIL_SCHEMA)
+    # def partial_update(self, request, *args, **kwargs):
+    #     try:
+    #         return super().partial_update(request, *args, **kwargs)
+    #     except PathOverflow as e:
+    #         return Response({"msg": e.__str__()}, status.HTTP_400_BAD_REQUEST)
+
+    @action(
+        methods=["GET"], detail=True, permission_classes=[IsAuthenticated, IsMemberUser]
+    )
+    def child_tickets(self, request, *args, **kwargs):
+        ticket_instance = self.get_object()
+        self.check_object_permissions(request, ticket_instance)
+        serializer = self.get_serializer(ticket_instance.get_children(), many=True)
+        return Response(serializer.data)
 
 
 class MemberViewSet(TeamRelatedModelViewSet):
