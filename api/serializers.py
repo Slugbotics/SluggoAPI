@@ -52,7 +52,6 @@ class TeamSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
-            "description",
             "object_uuid",
             "ticket_head",
             "created",
