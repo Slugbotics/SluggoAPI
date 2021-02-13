@@ -49,6 +49,7 @@ class Ticket(HasUuid, TeamRelated, mp_tree.MP_Node):
     description = models.TextField(blank=True)
     created = models.DateTimeField(auto_now_add=True)
     activated = models.DateTimeField(auto_now_add=True)
+    due_date = models.DateTimeField(null=True, blank=True)
     deactivated = models.DateTimeField(null=True, blank=True)
 
     class Meta:

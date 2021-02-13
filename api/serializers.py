@@ -222,6 +222,7 @@ class TicketSerializer(serializers.ModelSerializer):
             "description",
             "comments",
             "created",
+            "due_date",
             "activated",
             "deactivated",
         ]
